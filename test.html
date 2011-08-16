@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Test RE</title>
+    <script type="text/javascript" src="diceRoller.js"></script>
+    <script type="text/javascript">
+    	function testThis(nod) {
+    		var isFormatted = document.getElementById('isFormatted').checked;
+    		document.getElementById('resulttext').value = TextParsers.parse(nod.innerHTML,isFormatted);
+    	}
+    </script>
+    <style>
+	    body div#tests div {cursor: pointer; border:1px solid;}
+	    body div#tests div:nth-child(odd) {background: #FCC}
+	    body div#tests div:nth-child(even) {background: #CCF}
+    </style>
+</head>
+<body>
+	<div>
+		<textarea id='resulttext' style='width:500px;height:50px;'>Click an item below</textarea>
+	</div>
+	<br/>
+	<div id='options'>
+		<input type="checkbox" id="isFormatted" checked />isFormatted
+	</div>
+	<br/>
+	<div id='tests'>
+		<div onclick="testThis(this)";><p style="color:red">Red Text</p>Done.</div>
+		<div onclick="testThis(this)";>/roll: 5w + 3w!. [ 2w+4w+2w ]</div>
+		<div onclick="testThis(this)";>Bau rolls to cast his Occulus Repairo spell, [5WRote]</div>
+		<div onclick="testThis(this)";>[5W] => 5 d10, apply 10Again rule. <br/>
+[5w!] => 5 d10, apply 9 again rule <br/>
+[5w!!] => 5d10, apply 8 again rule</div>
+		<div onclick="testThis(this)";><b>[5wRote!]</b> should be bolded</div>
+		<div onclick="testThis(this)";>[5w!!Rote]</div>
+		<div onclick="testThis(this)";>I roll a [7w], You roll [6w!r] or [6wr!] or [6wRote] then /roll 5w!!</div>
+		<div onclick="testThis(this)";>I roll a [7s7r], You roll [6w!!] then /roll 5s7!!</div>
+		<div onclick="testThis(this)";>[5w]</div>
+		<div onclick="testThis(this)";>[7W10] or [10W5]</div>
+		<div onclick="testThis(this)";>[4wr!]</div>
+		<div onclick="testThis(this)";>[5w!rote]</div>
+		<div onclick="testThis(this)";>[5w!!rote]</div>
+		<div onclick="testThis(this)";>[4wRote!!!]</div>
+		<div onclick="testThis(this)";>5 weiner dogs rote w! In 3d!</div>
+		<div onclick="testThis(this)";>/roll 5w</div>
+		<div onclick="testThis(this)";>It's /roll [3W!]</div>
+		<div onclick="testThis(this)";>5wins!</div>
+		<hr>
+		<div onclick="testThis(this)";>I roll a [3 d20+2]</div>
+		<div onclick="testThis(this)";>I roll a 1d20+2</div>
+		<div onclick="testThis(this)";>[ 1d20	+7 	]</div>
+		<div onclick="testThis(this)";>1d20+12</div>
+		<div onclick="testThis(this)";>I roll a [1d20+2d8]</div>
+		<div onclick="testThis(this)";>I roll a [1d20 + 2d8], [You win]!</div>
+		<div onclick="testThis(this)";>[2d6!]! - I roll a 1d20+2, You roll 7d10, right? or (10d10)</div>
+		<div onclick="testThis(this)";>I roll a [1d20-7+1d8]</div>
+	</div>
+</body>
+</html>
