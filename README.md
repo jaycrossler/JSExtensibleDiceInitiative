@@ -37,6 +37,8 @@ diceRoller implenets a nodeJS interface to have rolls occur on the server. Sampl
 
 
 ## Options ##
+You can programmatically receive dice output in a variety of formats:
+
     <script type="text/javascript">
         var result1 = TextParsers.replaceDiceRolls("1d20+7",'longhtml');// html, longer text showing each die result, mouseover for more details
         var result2 = TextParsers.replaceDiceRolls("1d20+7",'fullhtml');// html, all dice rolls listed in page
@@ -48,7 +50,9 @@ diceRoller implenets a nodeJS interface to have rolls occur on the server. Sampl
         var result8 = TextParsers.replaceDiceRolls("1d20+7",'json');// json version of 'array' call
         var result9 = TextParsers.replaceDiceRolls("1d20+7",'xml');// XML of all results in standardized format
     </script>
+
 You can also use the shortcut "roll" instead of "replaceDiceRolls", or "d" for DND-type dice, or "w" for NWOD-type dice:
+
     <script type="text/javascript">
         var result = TextParsers.roll("I roll [3w]")
         var resxml = TextParsers.roll("I roll [5wr!]","xml")
@@ -62,10 +66,12 @@ You can also use the shortcut "roll" instead of "replaceDiceRolls", or "d" for D
 
 
 ### Utilities ###
+
 * rollTester.html gives a testing page that makes it easier to validate and test content
 * diceMatrix.html gives a matrix of many die rolls
 
 ### Styling ###
+
     <style>
         .rollresponse {background-color: #caf;}
         .dieinput {font-style: italic; font-size: small;}
