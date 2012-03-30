@@ -3,7 +3,10 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>JS Extensible Dice InitiativE (jeDIE) :: Tester</title>
+<!--    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script> -->
+    <script src="jquery-1.6.2.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="diceRoller.js"></script>
+    <script type="text/javascript" src="jquery.parseDice.js"></script>
     <script type="text/javascript">
 
 // JS Extensible Dice InitiativE (jeDIE)
@@ -11,30 +14,58 @@
 // by Jay Crossler, Open Source CC-BY license - feel free to use/reuse/derive/make $, just give me credit!
 // This is the test file to validate text works as desired
 
+        var formatTypes = ['fullhtml','longhtml','shorthtml','result','json','xml','array'];
+
         var lastText = "";
-    	function testThisText(clickedDiv) {
-    		var formatType = document.getElementById('dicerolltypes').value || ";"
+        function testThisText(clickedDiv) {
             var textToParse;
-            if (clickedDiv && clickedDiv.innerHTML) {
+            if (clickedDiv && clickedDiv.value) {
+                textToParse = clickedDiv.value;
+            }else if (clickedDiv && clickedDiv.innerHTML) {
                 textToParse = clickedDiv.innerHTML;
-                lastText=textToParse;
+                document.getElementById('usertext').value=textToParse;
             } else {
-                textToParse=lastText || "Nothing selected";
+                var userText = document.getElementById("usertext").value;
+                textToParse=userText || "Sample Default Text: [3d6]";
             }
-            
-            var returnedText = TextParsers.replaceDiceRolls(textToParse,formatType);
-    		document.getElementById('resulttextarea').value = returnedText;            
-            document.getElementById('resulttext').innerHTML = returnedText;
+
+            var returnedText = '';
+            var formatType = '';
+            for (var looper=0;looper<formatTypes.length;looper++) {
+                formatType = formatTypes[looper];
+                returnedText = TextParsers.replaceDiceRolls(textToParse,formatType);
+
+                document.getElementById('resulttextarea_' + formatType).innerHTML = returnedText;
+
+                if (formatType == 'xml')
+                    document.getElementById('resulttextarea_clickable').innerHTML = returnedText;
+
+            }
+
+            //Run the JQuery Plugin
+            $("#resulttextarea_clickable dice").parseDice();
         }
+
+        function bigify(item){
+            item.style.height='250px';
+        }
+
     </script>
     <style>
-	    body div#tests div {cursor: pointer; border:1px solid;}
-	    body div#tests div:nth-child(odd) {background: #DCC}
-	    body div#tests div:nth-child(even) {background: #CCF}
-        #resulttext {border:  2px solid gold;}
-        .holder {width: 48%;}
-        .left {float: left;}
-        .right {float: right;}
+        body {background-color:#555; color: gold; font-family: helvetica  }
+        body div#tests div {cursor: pointer; border:1px solid;}
+        body div#tests div:nth-child(odd) {background: #00F}
+        body div#tests div:nth-child(even) {background: #00A}
+        textarea {width:400px;height:50px;border:2px solid gold; background-color: #AAA;color:black;}
+
+        #parsed_results {padding:5px; display:inline;}
+        #parsed_results div {width:420px; display:inline-block;}
+        #parsed_results div textarea {width:400px;height:100px;}
+        #parsed_results div div      {width:400px;height:100px;border:2px solid gold; background-color:#AAA;color:black;overflow:scroll;}
+
+        #text_inputs {width: 400px; padding:5px;float:left;font-size: 11px}
+
+        #usertext {border:2px solid green;}
     </style>
 
     <!-- Styles to include to render dice rolls -->
@@ -46,59 +77,88 @@
         .diefailure {background-color: #d88}
     </style>
 </head>
-<body>
-	<div>
-		Text: <br/>
-        <textarea id='resulttextarea' style='width:500px;height:50px;' onclick="this.style.height='250px';">Click a piece of text below to test the dice roller</textarea>
-	</div>
+<body onload="testThisText();">
 
-    HTML: <div id='resulttext'>&nbsp;</div>
+    <h1>DiceRoller Testing Page</h1>
+    
+    <div id="text_inputs">
+        <h3>Text to Parse:</h3>
+        <label>Enter text to send to the parser:</label><br/>
+        <textarea id="usertext" onchange="testThisText(this);" onkeyup="testThisText(this);">Sample Default Text: [3d6]!</textarea>
+        <hr>
+        or click Sample input text :<br/>
+        <div id='tests'>
+            <div onclick="testThisText(this);">I /roll: 5w + 3w!. [ 2w+4w+2w ]</div>
+            <div onclick="testThisText(this);">Bau rolls to cast his Occulus Repairo spell, [5WRote]</div>
+            <div onclick="testThisText(this);">[5W] => 5 d10, apply 10Again rule. <br/>
+                [5w!] => 5 d10, apply 9 again rule <br/>
+                [5w!!] => <b>5d10</b>, apply 8 again rule</div>
+            <div onclick="testThisText(this);"><b>[5wRote!]</b> should be bolded</div>
+            <div onclick="testThisText(this);">[5w!!Rote]</div>
+            <div onclick="testThisText(this);">I roll a [7w], You roll [6w!r] or [6wr!] or [6wRote] then /roll 5w!! </div>
+            <div onclick="testThisText(this);">I roll a [7s7r], You roll [6w!!] then /roll 5s7!!</div>
+            <div onclick="testThisText(this);"><p style="color:red">Red Text: [5d8]</p>Done.</div>
+            <div onclick="testThisText(this);">[5w]</div>
+            <div onclick="testThisText(this);">[7W10] or [10W5]</div>
+            <div onclick="testThisText(this);">[4wr!]</div>
+            <div onclick="testThisText(this);">[5w!rote]</div>
+            <div onclick="testThisText(this);">[5w!!rote]</div>
+            <div onclick="testThisText(this);">[4wRote!!!]</div>
+            <div onclick="testThisText(this);">5 weiner dogs rote w! In 3d!</div>
+            <div onclick="testThisText(this);">/roll 5w</div>
+            <div onclick="testThisText(this);">It's /roll [3W!?]</div>
+            <div onclick="testThisText(this);">5wins!</div>
 
-	<div id='options'>Styling of results:
-        <select id='dicerolltypes' onchange="testThisText();">
-          <option value="longhtml">longhtml</option>
-          <option value="fullhtml">fullhtml</option>
-          <option value="shorthtml">shorthtml</option>
-          <option value="longtext">longtext</option>
-          <option value="shorttext">shorttext</option>
-          <option value="result">result</option>
-        </select>
-	</div>
+            <div onclick="testThisText(this);">I roll a [3d20+2]</div>
+            <div onclick="testThisText(this);">I roll a 1d20+2</div>
+            <div onclick="testThisText(this);">[ 1d20	+7 	]</div>
+            <div onclick="testThisText(this);">1d20+12</div>
+            <div onclick="testThisText(this);">I roll a [1d20+2d8]</div>
+            <div onclick="testThisText(this);">I roll a [1d20 + 2d8], [You win]!</div>
+            <div onclick="testThisText(this);">[2d6!]! - I roll a 1d20+2, You roll 7d10, right? or (10d10)</div>
+            <div onclick="testThisText(this);">I roll a [1d20-7+1d8]</div>
+        </div>
 
-	<br/>
-	<div id='tests'>
-      <div class='holder left'>
-		<div onclick="testThisText(this);"><p style="color:red">Red Text: [5d8]</p>Done.</div>
-		<div onclick="testThisText(this);">I /roll: 5w + 3w!. [ 2w+4w+2w ]</div>
-		<div onclick="testThisText(this);">Bau rolls to cast his Occulus Repairo spell, [5WRote]</div>
-		<div onclick="testThisText(this);">[5W] => 5 d10, apply 10Again rule. <br/>
-[5w!] => 5 d10, apply 9 again rule <br/>
-[5w!!] => 5d10, apply 8 again rule</div>
-		<div onclick="testThisText(this);"><b>[5wRote!]</b> should be bolded</div>
-		<div onclick="testThisText(this);">[5w!!Rote]</div>
-		<div onclick="testThisText(this);">I roll a [7w], You roll [6w!r] or [6wr!] or [6wRote] then /roll 5w!! </div>
-		<div onclick="testThisText(this);">I roll a [7s7r], You roll [6w!!] then /roll 5s7!!</div>
-		<div onclick="testThisText(this);">[5w]</div>
-		<div onclick="testThisText(this);">[7W10] or [10W5]</div>
-		<div onclick="testThisText(this);">[4wr!]</div>
-		<div onclick="testThisText(this);">[5w!rote]</div>
-		<div onclick="testThisText(this);">[5w!!rote]</div>
-		<div onclick="testThisText(this);">[4wRote!!!]</div>
-		<div onclick="testThisText(this);">5 weiner dogs rote w! In 3d!</div>
-		<div onclick="testThisText(this);">/roll 5w</div>
-		<div onclick="testThisText(this);">It's /roll [3W!]</div>
-		<div onclick="testThisText(this);">5wins!</div>
-	  </div>
-      <div class='holder right'>
-		<div onclick="testThisText(this);">I roll a [3 d20+2]</div>
-		<div onclick="testThisText(this);">I roll a 1d20+2</div>
-		<div onclick="testThisText(this);">[ 1d20	+7 	]</div>
-		<div onclick="testThisText(this);">1d20+12</div>
-		<div onclick="testThisText(this);">I roll a [1d20+2d8]</div>
-		<div onclick="testThisText(this);">I roll a [1d20 + 2d8], [You win]!</div>
-		<div onclick="testThisText(this);">[2d6!]! - I roll a 1d20+2, You roll 7d10, right? or (10d10)</div>
-		<div onclick="testThisText(this);">I roll a [1d20-7+1d8]</div>
-      </div>
-	</div>
+    </div>
+
+    <div id="parsed_results">
+        <h3>Results:</h3>
+
+        <div><label>TextParsers.replaceDiceRolls(textToParse,'fullhtml'):</label><br/>
+            <div id='resulttextarea_fullhtml'>&nbsp;</div>
+        </div>
+    
+        <div><label>TextParsers.replaceDiceRolls(textToParse,'longhtml'):</label><br/>
+            <div id='resulttextarea_longhtml'>&nbsp;</div>
+        </div>
+    
+        <div><label>TextParsers.replaceDiceRolls(textToParse,'shorthtml'):</label><br/>
+            <div id='resulttextarea_shorthtml'>&nbsp;</div>
+        </div>
+        <div><label>TextParsers.replaceDiceRolls(textToParse,'result'):</label><br/>
+            <div id='resulttextarea_result'>&nbsp;</div>
+        </div>
+    
+        <div><label>TextParsers.replaceDiceRolls(textToParse,'array'):</label><br/>
+            <div id='resulttextarea_array'>&nbsp;</div>
+        </div>
+    
+        <div><label>TextParsers.replaceDiceRolls(textToParse,'json'):</label><br/>
+            <div id='resulttextarea_json'>&nbsp;</div>
+        </div>
+    
+        <div><label>TextParsers.replaceDiceRolls(textToParse,'xml'):</label><br/>
+            <textarea id='resulttextarea_xml'>&nbsp;</textarea>
+        </div>
+    
+        <div id="jquerytest"><label>Clickable XML (via the jquery plugin):</label><br/>
+            <div id='resulttextarea_clickable'>&nbsp;</div>
+        </div>
+    </div>
+
+
+
+
+
 </body>
 </html>

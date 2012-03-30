@@ -18,13 +18,13 @@
             matrixHolder.innerHTML = "";
 
             var options = ["w","w7","w9","wr","wr!","wr!!","wr!!!","wr!!!!","d2","d6","d10"];
-
+            var tr, td;
 
             for (var y= -1;y<options.length;y++) {
-                var tr = document.createElement("tr");
+                tr = document.createElement("tr");
 
 
-                var td = document.createElement("td");
+                td = document.createElement("td");
                 td.setAttribute('class','rowhead');
                 td.setAttribute('className','rowhead');
                 td.innerHTML = options[y] || "";
@@ -33,23 +33,23 @@
                 for (var x=1;x<=maxDice;x++) {
                     var diceString = "";
                     if (y == -1) {
-                        var td = document.createElement("td");
+                        td = document.createElement("td");
                         td.setAttribute('class','columnhead');
                         td.setAttribute('className','columnhead');
                         diceString = x + " dice";
                         td.innerHTML = diceString;
                         tr.appendChild(td);
                     } else {
-                        var td = document.createElement("td");
+                        td = document.createElement("td");
                         diceString = "[" + x + options[y] + "]";
                         var result = 0;
                         for (var j=0;j<runs;j++) {
                             result += parseInt(TextParsers.replaceDiceRolls(diceString,'result'));
                         }
                         result=Math.round(result*(runs/10)/runs)/(runs/10);
-                        var class = (result < 1) ? 'dieresult diefailure' : (result > x) ? 'dieresult diewow' : 'dieresult diesuccess';
-                        td.setAttribute('class',class);
-                        td.setAttribute('className',class);
+                        var classname = (result < 1) ? 'dieresult diefailure' : (result > x) ? 'dieresult diewow' : 'dieresult diesuccess';
+                        td.setAttribute('class',classname);
+                        td.setAttribute('className',classname);
                         td.setAttribute('title',diceString);
                         td.innerHTML = result;
                         tr.appendChild(td);
@@ -75,11 +75,11 @@
         .diewow {background-color: #ffd700;}
     </style>
 </head>
-<body onload="buildMatrix();">
-<h1>NWoD Style Rolls:</h1>
+<body onload="buildMatrix(200);">
+<h1>NWoD Style Rolls to verify success ratios make sense:</h1>
 	<table id='matrixholder'></table>
-    <input type="button" onclick="buildMatrix();" value="Rebuild Matrix"/>
-    <input type="button" onclick="buildMatrix(100);" value="Rebuild Matrix 100 runs"/>
-    <input type="button" onclick="buildMatrix(1000);" value="Rebuild Matrix 1000 runs"/>
+    <input type="button" onclick="buildMatrix();" value="Rebuild Matrix - roll each 10 times"/>
+    <input type="button" onclick="buildMatrix(100);" value="Rebuild Matrix - roll each 100 times"/>
+    <input type="button" onclick="buildMatrix(1000);" value="Rebuild Matrix - roll each 1000 times"/>
 </body>
 </html>
