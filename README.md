@@ -5,7 +5,7 @@ by Jay Crossler, Open Source CC-BY license
 
 
 ### Usage ###
-    <script type="text/javascript" src="diceRoller.js"></script>
+    <script type="text/javascript" src="src/diceRoller.js"></script>
     <script type="text/javascript">
         var revisedText = TextParsers.replaceDiceRolls("I Roll [5W] or [3d6+10]",'fullhtml');
         alert(revisedText);
@@ -15,8 +15,8 @@ by Jay Crossler, Open Source CC-BY license
 #### jQuery Plugin to style dice results ####
 If you are storing results in a database and want to later access each individual roll and data (and potentially switch between display modes), you can use 'xml' as the data type. There is also a jquery plugin that changes the xml on screen to a stylized display that you can rotate through when clicking on them.
 
-    <script type="text/javascript" src="jquery-1.6.2.min.js"></script>
-    <script type="text/javascript" src="jquery.parseDice.js"></script>
+    <script type="text/javascript" src="src/libs/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="src/jquery.parseDice.js"></script>
 
 If you use XML mode, then the diceParser can add styling and let you click through options. After calculating the dice data in xml mode, use:
 
