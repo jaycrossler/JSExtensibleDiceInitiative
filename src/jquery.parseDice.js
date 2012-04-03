@@ -49,6 +49,7 @@ $(document).ready(function() {
                     $(this).find('text')[0].innerHTML = TextParsers.buildStringFromXML(objDice, type, renderMode);
                     $(this).data('currentRenderMode', renderMode);
                     $(this).css('cursor', 'pointer');
+                    $(this).css('display','inline');
                 }
 
                 if (isThisNew) {
