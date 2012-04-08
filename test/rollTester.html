@@ -3,8 +3,8 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>JS Extensible Dice InitiativE (jeDIE) :: Tester</title>
-<!--    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script> -->
-    <script type="text/javascript" src="../src/libs/jquery-1.6.2.min.js"></script>
+<!--    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script> -->
+    <script type="text/javascript" src="../src/libs/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="../src/diceRoller.js"></script>
     <script type="text/javascript" src="../src/jquery.parseDice.js"></script>
     <script type="text/javascript">
@@ -29,11 +29,16 @@
                 textToParse=userText || "Sample Default Text: [3d6]";
             }
 
-            var returnedText = '';
-            var formatType = '';
+            //Actually roll the dice, and get an array of all the roll results
+            var returnedRolls= TextParsers.replaceDiceRolls(textToParse);
+
+            var returnedText = '', formatType = '';
             for (var looper=0;looper<formatTypes.length;looper++) {
                 formatType = formatTypes[looper];
-                returnedText = TextParsers.replaceDiceRolls(textToParse,formatType);
+                returnedText = TextParsers.buildStringFromRollsArray(returnedRolls,formatType);
+
+                if (formatType == 'array')
+                    returnedText = returnedRolls.rolls.length + " text pieces in an array format: " + JSON.stringify(returnedRolls.rolls);
 
                 document.getElementById('resulttextarea_' + formatType).innerHTML = returnedText;
 
@@ -44,11 +49,6 @@
             //Run the JQuery Plugin
             $("#resulttextarea_clickable dice").parseDice();
         }
-
-        function bigify(item){
-            item.style.height='250px';
-        }
-
     </script>
     <style>
         body {background-color:#555; color: gold; font-family: helvetica  }

@@ -23,7 +23,6 @@
             for (var y= -1;y<options.length;y++) {
                 tr = document.createElement("tr");
 
-
                 td = document.createElement("td");
                 td.setAttribute('class','rowhead');
                 td.setAttribute('className','rowhead');
@@ -44,7 +43,7 @@
                         diceString = "[" + x + options[y] + "]";
                         var result = 0;
                         for (var j=0;j<runs;j++) {
-                            result += parseInt(TextParsers.replaceDiceRolls(diceString,'result'));
+                            result += parseInt(TextParsers.replaceDiceRolls(diceString,'result').text);
                         }
                         result=Math.round(result*(runs/10)/runs)/(runs/10);
                         var classname = (result < 1) ? 'dieresult diefailure' : (result > x) ? 'dieresult diewow' : 'dieresult diesuccess';

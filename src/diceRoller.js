@@ -1,33 +1,33 @@
-// JS Extensible Dice InitiativE (jeDIE) v3.2
+// JS Extensible Dice InitiativE (jeDIE) v3.3
 // This file contains extensions to a "TextParsers" class to parse and swap text with Dice rolls
 //
 // Summary: A string parser that extracts and replaces dice rolls in text, allows both D&D-type (D) dice rolls and World Of Darkness (NWOD)-type rolls
 //
 // Currently supports calls such as:
-// var result = TextParsers.replaceDiceRolls("I roll [3d6]")
-// var result = TextParsers.roll("I roll [3w]")
+// var result = TextParsers.replaceDiceRolls("I roll [3d6]").text
+// var result = TextParsers.roll("I roll [3w]").text
 // var resxml = TextParsers.roll("I roll [5wr!]","xml")
-// var resjson = TextParsers.roll("[5w]","json")
-// var result = TextParsers.roll("[10d4+3d2+5]!","result")
-// var result = TextParsers.die("20")
-// var result = TextParsers.d("2d20")
-// var result = TextParsers.d("3d10+4")
-// var result = TextParsers.w("5w")
+// var resjson = TextParsers.roll("[5w]","json").text
+// var result = TextParsers.roll("[10d4+3d2+5]!","result").text
+// var result = TextParsers.die("20").text
+// var result = TextParsers.d("2d20").text
+// var result = TextParsers.d("3d10+4").text
+// var result = TextParsers.w("5w").text
 
 //
 // by Jay Crossler, Open Source CC-BY license - feel free to use/reuse/derive/make $, just give me credit!
 
 //Next steps:
-//TODO: Return an object that has each roll in it and user who made it
 //TODO: Integrate with the DiceBoard HTML5 Canvas grapher project
 // On the horizon:
-//TODO: Either show images of dice as results, or generate them on the fly using canvas or three.js
 //TODO: Have a different random number generator, potentially with a deterministic seed: http://davidbau.com/archives/2010/01/30/random_seeds_coded_hints_and_quintillions.html
+
+//NOTE: All the rules for parsing out dice rolls are in TextParsers.parsingExpressions at the end of the file
 
 // Exporter function for including within NodeJS for server-based rolls.
 // Remove these three lines if you are having trouble with an existing exports class
 if (typeof exports != "undefined") exports.parseBlip = function (text, format) {
-    return TextParsers.replaceDiceRolls(text, format || 'xml');
+    return TextParsers.replaceDiceRolls(text, format || 'xml').text;
 };
 
 //The TextParsers Library for parsing through dice roll text
@@ -36,48 +36,19 @@ if (typeof TextParsers == "undefined") TextParsers = {}; // Create the class if 
 TextParsers.defaultDiceFormatReturned = 'shorthtml';
 TextParsers.replaceDiceRolls = TextParsers.roll =  function(text, formatType) {
     //Note, when building REs, suggest using: http://regexpal.com/ (and take out the starting and ending / when pasting into page)
-    var parsingExpressions = [
-        {
-//                exp: /(?:[0-9]+[dD][0-9]+[e]{0,1}\s*[+-]{0,1}\s*[0-9]*(?![dD])[+]{0,1})+|\[\s*(?:[0-9]+[dD][0-9]+[e]{0,1}\s*[+-]{0,1}\s*[0-9]*(?![dD])[+]{0,1})+\s*\]/ ,
-            exp: /\[\s*(?:[0-9]+[dD][0-9]+[e]{0,1}\s*[+-]{0,1}\s*[0-9]*(?![dD])[+]{0,1})+\s*\]/ ,
-            func: this.buildResponseStringFromStandardDiceRolls,
-            parserName: "Dice Roller",
-            sampleUsage: "[1d8] or [2d10] or [3d5+7] or [2d10+4+1d4 - 1d10]"
-        },
-        {
-            exp: /\[\s*(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]|\/roll[\s:=]*\[{0,1}\s*(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]{0,1}/ ,
-            func: this.buildResponseStringFromNWODRolls,
-            parserName: "NWOD Success Calculator",
-            sampleUsage: "[1w] or [2W!] (reroll 9s not just 10s) or [5wRote] (1st aren't a failure) or /roll 2w or /roll: [ 2w + 4w!]"
-        },
-        {
-            exp: /^(?:[0-9]+[dD][0-9]+[e]{0,1}\s*[+-]{0,1}\s*[0-9]*(?![dD])[+]{0,1})+/ ,
-            func: this.buildResponseStringFromStandardDiceRolls,
-            runOnce: true,
-            parserName: "Dice Roller",
-            sampleUsage: "1d8 or 2d10 or 3d5+7 or 2d10+4+1d4 - 1d10"
-        },
-        {
-            exp: /^(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*)+/ ,
-            func: this.buildResponseStringFromNWODRolls,
-            runOnce: true,
-            parserName: "NWOD Success Calculator",
-            sampleUsage: "1w or 2W! or 5wRote"
-        }
-
-    ];
 
     var numEmptyMatches = 0;
     var loopCount = 0;
     var breakAfterFound = false;
     var parsedtext = "";
     var remainingtext = text;
+    var result = {text:'',rolls:[]};
 
-    while ((numEmptyMatches < parsingExpressions.length) && (loopCount < 20)) {
+    while ((numEmptyMatches < this.parsingExpressions.length) && (loopCount < 20)) {
         loopCount++;
         numEmptyMatches = 0;
-        for (var i = 0; i < parsingExpressions.length; i++) {
-            var re = parsingExpressions[i];
+        for (var i = 0; i < this.parsingExpressions.length; i++) {
+            var re = this.parsingExpressions[i];
 
             var item_matched = remainingtext.match(re.exp);
 
@@ -85,7 +56,13 @@ TextParsers.replaceDiceRolls = TextParsers.roll =  function(text, formatType) {
                 var dicetext = item_matched[0];
                 var loc = remainingtext.indexOf(dicetext);
                 var result_roll = TextParsers.rollTheDice(re.func, dicetext, formatType || this.defaultDiceFormatReturned);
-                parsedtext += remainingtext.substr(0,loc) + result_roll;
+                var startText = remainingtext.substr(0,loc);
+                if (loc>0) {
+                    //There was text before the matched point
+                    result.rolls.push({format:'text',input:startText});
+                }
+                parsedtext += startText + result_roll;
+                result.rolls.push(TextParsers.rollTheDice(re.func, dicetext, 'array'));
                 remainingtext = remainingtext.substr(loc + dicetext.length);
                 if (re.runOnce) {
                     breakAfterFound = true;
@@ -97,21 +74,43 @@ TextParsers.replaceDiceRolls = TextParsers.roll =  function(text, formatType) {
         }
         if (breakAfterFound) break; //The RegEx should only be run once, so exit
     }
-    return parsedtext + remainingtext;
+    if (remainingtext && remainingtext.length && remainingtext.length>0){
+        result.rolls.push({format:'text', input:remainingtext});
+    }
+    result.text = parsedtext + remainingtext;
+    return result;
 };
 
 //==String building functions==========================================================
-TextParsers.buildStringFromXML = function(diceArray, type, formatType) {
-    if (type) switch (type.toLowerCase() || 'd') {
-        case 'nwod':
-            return TextParsers.buildResponseStringFromNWODRolls('', formatType, diceArray);
-            break;
-        case 'd':
-            return TextParsers.buildResponseStringFromStandardDiceRolls('', formatType, diceArray);
-            break;
+TextParsers.buildStringFromRollsArray = function(rollsArray, outputFormat){
+    var outputStr = "";
+    var foundParser = false;
+    if (rollsArray && rollsArray.rolls && rollsArray.rolls.length && rollsArray.rolls.length > 0) {
+        for (var r=0;r<rollsArray.rolls.length;r++){
+            var roll = rollsArray.rolls[r];
+            if (roll.format) {
+                if (roll.format == 'text') {
+                    outputStr+=roll.input || "";
+                    foundParser = true;
+                } else {
+                    for(var p=0;p<TextParsers.parsingExpressions.length;p++) {
+                        if(TextParsers.parsingExpressions[p].format == roll.format){
+                            outputStr+=TextParsers.parsingExpressions[p].func('',outputFormat,roll);
+                            foundParser = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
-    return JSON.stringify(diceArray);
+    if (!foundParser) {
+        //Doesn't seem to be a valid array, return what was sent in
+        outputStr = rollsArray.text || rollsArray;
+    }
+    return outputStr;
 };
+// Text parsers:
 TextParsers.buildResponseStringFromNWODRolls = TextParsers.w = function(input, formatType, useArrayInstead) {
     var response = useArrayInstead || TextParsers.buildArrayFromNWODDiceRolls(input);
     //Rules:
@@ -218,7 +217,6 @@ TextParsers.buildResponseStringFromNWODRolls = TextParsers.w = function(input, f
     //If no format option matched, return the entered text
     return output;
 };
-
 TextParsers.buildResponseStringFromStandardDiceRolls = TextParsers.d = function(input, formatType, useArrayInstead) {
     var response = useArrayInstead || TextParsers.buildArrayFromStandardDiceRolls(input);
 
@@ -323,6 +321,19 @@ TextParsers.buildResponseStringFromStandardDiceRolls = TextParsers.d = function(
     return output;
 };
 
+TextParsers.buildStringFromXML = function(diceArray, type, formatType) {
+    //Used by the jquery.parseDice plugin
+    if (type) switch (type.toLowerCase() || 'd') {
+        case 'nwod':
+            return TextParsers.buildResponseStringFromNWODRolls('', formatType, diceArray);
+            break;
+        case 'd':
+            return TextParsers.buildResponseStringFromStandardDiceRolls('', formatType, diceArray);
+            break;
+    }
+    return JSON.stringify(diceArray);
+};
+
 //==Rolling and Parsing functions==========================================================
 TextParsers.buildArrayFromNWODDiceRolls = function(input) {
     //parse the text, roll dice, and output an array
@@ -417,7 +428,7 @@ TextParsers.buildArrayFromNWODDiceRolls = function(input) {
         }
 
     }
-    return {rolls:rolls, rollhistory:rollhistory, rollhistorymin:rollhistorymin, rollsuccess:rollsuccess, rollagains:rollagains, input:input};
+    return {rolls:rolls, rollhistory:rollhistory, rollhistorymin:rollhistorymin, rollsuccess:rollsuccess, rollagains:rollagains, input:input, format:'w'};
 };
 
 TextParsers.buildArrayFromStandardDiceRolls = function(input) {
@@ -457,8 +468,9 @@ TextParsers.buildArrayFromStandardDiceRolls = function(input) {
         else return {"res":[], "type":[]};
     }
     if (res.length == 0) return {res:[], type:[], input:""};
-    return {res:res, type:type, input:input};
+    return {res:res, type:type, input:input, format:'d'};
 };
+
 TextParsers.rollTheDice = function(diceType, input, formatType) {
     //Reflexive function applier
     return diceType(input, formatType);
@@ -475,3 +487,35 @@ TextParsers.repeatString = function(str, times) {
     for (var i = 0; i < times; i++) returnstr += str;
     return returnstr;
 };
+TextParsers.parsingExpressions = [
+    {
+        exp: /\[\s*(?:[0-9]+[dD][0-9]+[e]{0,1}\s*[+-]{0,1}\s*[0-9]*(?![dD])[+]{0,1})+\s*\]/ ,
+        func: TextParsers.buildResponseStringFromStandardDiceRolls,
+        parserName: "Dice Roller",
+        format : 'd',
+        sampleUsage: "[1d8] or [2d10] or [3d5+7] or [2d10+4+1d4 - 1d10]"
+    },
+    {
+        exp: /\[\s*(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]|\/roll[\s:=]*\[{0,1}\s*(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]{0,1}/ ,
+        func: TextParsers.buildResponseStringFromNWODRolls,
+        parserName: "NWOD Success Calculator",
+        format : 'w',
+        sampleUsage: "[1w] or [2W!] (reroll 9s not just 10s) or [5wRote] (1st aren't a failure) or /roll 2w or /roll: [ 2w + 4w!]"
+    },
+    {
+        exp: /^(?:[0-9]+[dD][0-9]+[e]{0,1}\s*[+-]{0,1}\s*[0-9]*(?![dD])[+]{0,1})+/ ,
+        func: TextParsers.buildResponseStringFromStandardDiceRolls,
+        runOnce: true,
+        parserName: "Dice Roller",
+        format : 'd',
+        sampleUsage: "1d8 or 2d10 or 3d5+7 or 2d10+4+1d4 - 1d10"
+    },
+    {
+        exp: /^(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*)+/ ,
+        func: TextParsers.buildResponseStringFromNWODRolls,
+        runOnce: true,
+        parserName: "NWOD Success Calculator",
+        format : 'w',
+        sampleUsage: "1w or 2W! or 5wRote"
+    }
+];
