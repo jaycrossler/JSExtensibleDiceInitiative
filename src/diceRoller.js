@@ -17,11 +17,6 @@
 //
 // by Jay Crossler, Open Source CC-BY license - feel free to use/reuse/derive/make $, just give me credit!
 
-//Next steps:
-//TODO: Integrate with the DiceBoard HTML5 Canvas grapher project
-// On the horizon:
-//TODO: Have a different random number generator, potentially with a deterministic seed: http://davidbau.com/archives/2010/01/30/random_seeds_coded_hints_and_quintillions.html
-
 //NOTE: All the rules for parsing out dice rolls are in TextParsers.parsingExpressions at the end of the file
 
 // Exporter function for including within NodeJS for server-based rolls.
@@ -40,30 +35,29 @@ TextParsers.replaceDiceRolls = TextParsers.roll =  function(text, formatType) {
     var numEmptyMatches = 0;
     var loopCount = 0;
     var breakAfterFound = false;
-    var parsedtext = "";
-    var remainingtext = text;
+    var remainingText = text;
     var result = {text:'',rolls:[]};
 
+    //TODO: Have the nearest parser run first, not the next in the order - as "[2d6] and [2d6] and [3w]" misses roll 2
     while ((numEmptyMatches < this.parsingExpressions.length) && (loopCount < 20)) {
         loopCount++;
         numEmptyMatches = 0;
         for (var i = 0; i < this.parsingExpressions.length; i++) {
             var re = this.parsingExpressions[i];
 
-            var item_matched = remainingtext.match(re.exp);
+            var item_matched = remainingText.match(re.exp);
 
             if (item_matched && item_matched.length > 0) {
-                var dicetext = item_matched[0];
-                var loc = remainingtext.indexOf(dicetext);
-                var result_roll = TextParsers.rollTheDice(re.func, dicetext, formatType || this.defaultDiceFormatReturned);
-                var startText = remainingtext.substr(0,loc);
+                var diceText = item_matched[0];
+                var loc = remainingText.indexOf(diceText);
+                var theRoll = TextParsers.rollTheDice(re.func, diceText, 'array');
+                var startText = remainingText.substr(0,loc);
                 if (loc>0) {
                     //There was text before the matched point
                     result.rolls.push({format:'text',input:startText});
                 }
-                parsedtext += startText + result_roll;
-                result.rolls.push(TextParsers.rollTheDice(re.func, dicetext, 'array'));
-                remainingtext = remainingtext.substr(loc + dicetext.length);
+                result.rolls.push(theRoll);
+                remainingText = remainingText.substr(loc + diceText.length);
                 if (re.runOnce) {
                     breakAfterFound = true;
                     break;
@@ -72,12 +66,12 @@ TextParsers.replaceDiceRolls = TextParsers.roll =  function(text, formatType) {
                 numEmptyMatches++;
             }
         }
-        if (breakAfterFound) break; //The RegEx should only be run once, so exit
+        if (breakAfterFound) break; //This RegEx should only be run once, so exit
     }
-    if (remainingtext && remainingtext.length && remainingtext.length>0){
-        result.rolls.push({format:'text', input:remainingtext});
+    if (remainingText && remainingText.length && remainingText.length>0){
+        result.rolls.push({format:'text', input:remainingText});
     }
-    result.text = parsedtext + remainingtext;
+    result.text = this.buildStringFromRollsArray(result, formatType || this.defaultDiceFormatReturned);
     return result;
 };
 
@@ -475,9 +469,13 @@ TextParsers.rollTheDice = function(diceType, input, formatType) {
     //Reflexive function applier
     return diceType(input, formatType);
 };
+TextParsers.randRange = function(min,max){
+    var randVal = min+(Math.random() * (max-min));
+    return Math.round(randVal);
+};
 TextParsers.die = function(sides) {
     //Rolls an "n-sided die"
-    return Math.ceil(sides * Math.random());
+    return TextParsers.randRange(0,sides);
 };
 TextParsers.pluralizeSuccess = function(num) {
     return (num > 1) ? "successes" : (num == 1) ? "success" : "failure";
