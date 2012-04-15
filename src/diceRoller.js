@@ -38,6 +38,8 @@ TextParsers.replaceDiceRolls = TextParsers.roll =  function(text, formatType) {
     var remainingText = text;
     var result = {text:'',rolls:[]};
 
+    //TODO: Parse out link URLs, Map locs
+
     //TODO: Have the nearest parser run first, not the next in the order - as "[2d6] and [2d6] and [3w]" misses roll 2
     while ((numEmptyMatches < this.parsingExpressions.length) && (loopCount < 20)) {
         loopCount++;
@@ -369,7 +371,7 @@ TextParsers.buildArrayFromNWODDiceRolls = function(input) {
         var extrarolls = 0; //Rerolls from rote failures
         var rollhistmin;
         for (var j = 0; j < numrolls; j++) {
-            roll = TextParsers.die(10);
+            roll = TextParsers.randRange(1,10);
             rollid = j;
             rollhist = "";
             rollhistmin = "";
@@ -399,7 +401,7 @@ TextParsers.buildArrayFromNWODDiceRolls = function(input) {
             rollhistorymin[rollid] = rollhistmin;
         }
         for (j = 0; j < extrarolls; j++) {
-            var roll = TextParsers.die(10);
+            var roll = TextParsers.randRange(1,10);
             var rollhist = "Extra Roll";
             var rollid = numrolls + j;
             if (roll >= rollagain) {
@@ -451,7 +453,7 @@ TextParsers.buildArrayFromStandardDiceRolls = function(input) {
             var max = parseInt(match[4] || "0");
             if (match[3]) {
                 for (var j = 1; j <= num; j++) {
-                    res[res.length] = sign * TextParsers.die(max);
+                    res[res.length] = sign * TextParsers.randRange(1,max);
                     type[type.length] = max;
                 }
             } else {
@@ -469,9 +471,10 @@ TextParsers.rollTheDice = function(diceType, input, formatType) {
     //Reflexive function applier
     return diceType(input, formatType);
 };
-TextParsers.randRange = function(min,max){
-    var randVal = min+(Math.random() * (max-min));
-    return Math.round(randVal);
+TextParsers.randRange = function (minVal,maxVal,floatVal){
+    //optional Floatval specifies number of decimal points
+    var randVal = minVal+(Math.random()*(maxVal-minVal+1));
+    return typeof floatVal=='undefined'?Math.round(randVal-.5):randVal.toFixed(floatVal);
 };
 TextParsers.die = function(sides) {
     //Rolls an "n-sided die"
