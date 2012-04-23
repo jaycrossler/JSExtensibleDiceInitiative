@@ -1,5 +1,5 @@
 #### JS Extensible Dice InitiativE (jeDIE) ####
-Version 3.3
+Version 3.4
 A string parser that extracts and replaces dice rolls in text
 by Jay Crossler, Open Source CC-BY license
 
