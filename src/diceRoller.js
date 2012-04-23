@@ -1,4 +1,4 @@
-// JS Extensible Dice InitiativE (jeDIE) v3.3
+// JS Extensible Dice InitiativE (jeDIE) v3.4
 // This file contains extensions to a "TextParsers" class to parse and swap text with Dice rolls
 //
 // Summary: A string parser that extracts and replaces dice rolls in text, allows both D&D-type (D) dice rolls and World Of Darkness (NWOD)-type rolls
@@ -13,6 +13,9 @@
 // var result = TextParsers.d("2d20").text
 // var result = TextParsers.d("3d10+4").text
 // var result = TextParsers.w("5w").text
+// var result = TextParsers.roll("I roll [Note:3w]").text
+// var result = TextParsers.roll("I roll [Character.Strength:3w]").text
+// var result = TextParsers.roll("Go to [http://www.com]").text
 
 //
 // by Jay Crossler, Open Source CC-BY license - feel free to use/reuse/derive/make $, just give me credit!
@@ -346,6 +349,13 @@ TextParsers.buildArrayFromNWODDiceRolls = function(input) {
     if (((first == "[") && (last == "]")) || ((first == "(") && (last == ")"))) {
         input = input.substr(1, input.length - 2).trim();
     }
+    var note = "";
+    if (input.indexOf(":")>-1) {
+        //Has a :, remove everything before
+        note = input.substr(0,input.lastIndexOf(":"));
+        var inputarr = input.split(":");
+        input = inputarr[inputarr.length-1];
+    }
     var re = / *\+ */;
     var items = input.split(re);
     var rolls = [];
@@ -424,7 +434,7 @@ TextParsers.buildArrayFromNWODDiceRolls = function(input) {
         }
 
     }
-    return {rolls:rolls, rollhistory:rollhistory, rollhistorymin:rollhistorymin, rollsuccess:rollsuccess, rollagains:rollagains, input:input, format:'w'};
+    return {rolls:rolls, rollhistory:rollhistory, rollhistorymin:rollhistorymin, rollsuccess:rollsuccess, rollagains:rollagains, input:input, format:'w',note:note};
 };
 
 TextParsers.buildArrayFromStandardDiceRolls = function(input) {
@@ -435,6 +445,13 @@ TextParsers.buildArrayFromStandardDiceRolls = function(input) {
     var last = input.charAt(input.length - 1);
     if (((first == "[") && (last == "]")) || ((first == "(") && (last == ")"))) {
         input = input.substr(1, input.length - 2).trim();
+    }
+    var note = "";
+    if (input.indexOf(":")>-1) {
+        //Has a :, remove everything before
+        note = input.substr(0,input.lastIndexOf(":"));
+        var inputarr = input.split(":");
+        input = inputarr[inputarr.length-1];
     }
 
     var dice = input.replace(/- */, '+ -');
@@ -464,7 +481,7 @@ TextParsers.buildArrayFromStandardDiceRolls = function(input) {
         else return {"res":[], "type":[]};
     }
     if (res.length == 0) return {res:[], type:[], input:""};
-    return {res:res, type:type, input:input, format:'d'};
+    return {res:res, type:type, input:input, format:'d',note:note};
 };
 
 TextParsers.rollTheDice = function(diceType, input, formatType) {
@@ -488,26 +505,32 @@ TextParsers.repeatString = function(str, times) {
     for (var i = 0; i < times; i++) returnstr += str;
     return returnstr;
 };
+TextParsers.buildHyperlinks = function(input){
+    return {format:'text',input:"<a href='" + input + "'>"+input+"</a>"};
+};
+
 TextParsers.parsingExpressions = [
     {
         exp: /\[\s*(?:[0-9]+[dD][0-9]+[e]{0,1}\s*[+-]{0,1}\s*[0-9]*(?![dD])[+]{0,1})+\s*\]/ ,
         func: TextParsers.buildResponseStringFromStandardDiceRolls,
-        parserName: "Dice Roller",
+        parserName: "Standard Dice Roller",
         format : 'd',
-        sampleUsage: "[1d8] or [2d10] or [3d5+7] or [2d10+4+1d4 - 1d10]"
+        sampleUsage: "[1d8] or [2d10] or [3d5+7] or [2d10+4+1d4 - 1d10] or [To Hit:1d8] or [Bau.Blast:2d10]"
     },
     {
-        exp: /\[\s*(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]|\/roll[\s:=]*\[{0,1}\s*(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]{0,1}/ ,
+//        exp: /\[\s*(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]|\/roll[\s:=]*\[{0,1}\s*(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]{0,1}/ ,
+// NOTE: Removed the wonky "/roll:" syntax
+        exp: /\[\s*(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]/,
         func: TextParsers.buildResponseStringFromNWODRolls,
         parserName: "NWOD Success Calculator",
         format : 'w',
-        sampleUsage: "[1w] or [2W!] (reroll 9s not just 10s) or [5wRote] (1st aren't a failure) or /roll 2w or /roll: [ 2w + 4w!]"
+        sampleUsage: "[1w] or [2W!] (reroll 9s not just 10s) or [5wRote] (1st aren't a failure) "
     },
     {
         exp: /^(?:[0-9]+[dD][0-9]+[e]{0,1}\s*[+-]{0,1}\s*[0-9]*(?![dD])[+]{0,1})+/ ,
         func: TextParsers.buildResponseStringFromStandardDiceRolls,
         runOnce: true,
-        parserName: "Dice Roller",
+        parserName: "Dice Roller (no brackets)",
         format : 'd',
         sampleUsage: "1d8 or 2d10 or 3d5+7 or 2d10+4+1d4 - 1d10"
     },
@@ -515,8 +538,28 @@ TextParsers.parsingExpressions = [
         exp: /^(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*)+/ ,
         func: TextParsers.buildResponseStringFromNWODRolls,
         runOnce: true,
-        parserName: "NWOD Success Calculator",
+        parserName: "NWOD Success Calculator (no brackets)",
         format : 'w',
         sampleUsage: "1w or 2W! or 5wRote"
+    },
+    {
+        exp: /\[(\w+|(\w+.\w+)+):(?:[0-9]+[dD][0-9]+[e]{0,1}\s*[+-]{0,1}\s*[0-9]*(?![dD])[+]{0,1})+\s*\]/ ,
+        func: TextParsers.buildResponseStringFromStandardDiceRolls,
+        parserName: "Dice Roller (notes)",
+        format : 'd',
+        sampleUsage: "[1d8] or [2d10] or [3d5+7] or [2d10+4+1d4 - 1d10] or [To Hit:1d8] or [Bau.Blast:2d10]"
+    },
+    {
+        exp: /\[(\w+|(\w+.\w+)+):(\+{0,1}\s*[0-9]+[wW][0-9]*([rR]{0,1}[oOtTeE\?]*|[!])*\s*)+\]/,
+        func: TextParsers.buildResponseStringFromNWODRolls,
+        parserName: "NWOD Success Calculator (notes)",
+        format : 'w',
+        sampleUsage: "[blah:1w] or [blah.blah:2W!]"
+    },
+    {
+        exp: /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/i ,
+        func: TextParsers.buildHyperlinks,
+        parserName: "Hyperlink extractor",
+        sampleUsage: "text http://go.com more text"
     }
 ];

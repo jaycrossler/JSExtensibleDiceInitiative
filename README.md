@@ -37,7 +37,7 @@ diceRoller implements a nodeJS interface to have rolls occur on the server. Samp
 
 
 ## Options ##
-You can programmatically receive dice output in a variety of formats. The result is an object that has a .text (easily readible parsed result) and a .rolls[] (array with every roll made within the text):
+You can use javascript to receive dice output in a variety of formats. The result is an object that has a .text (easily readable parsed result) and a .rolls[] (array with every roll made within the text):
 
     <script type="text/javascript">
         var result1 = TextParsers.replaceDiceRolls("1d20+7",'longhtml').text;// html, longer text showing each die result, mouseover for more details
@@ -48,6 +48,9 @@ You can programmatically receive dice output in a variety of formats. The result
         var result6 = TextParsers.replaceDiceRolls("1d20+7",'result').text;// number, resulting total or total number of successes
         var result7 = TextParsers.replaceDiceRolls("1d20+7",'json').text;// json version of 'array' call
         var result8 = TextParsers.replaceDiceRolls("1d20+7",'xml').text;// XML of all results in standardized format
+        var result9 = TextParsers.roll("I roll [Note:3w]").text //Embed notes in the rolls
+        var result10 = TextParsers.roll("I roll [Character.Strength:3w]").text //Notes can have two levels, separated by a .
+        var result11 = TextParsers.roll("Go to [http://www.com]").text // Embed links in as well
         var resultArray = TextParsers.replaceDiceRolls("1d20+7",'array');// object with arrays of dice results and data
     </script>
 
